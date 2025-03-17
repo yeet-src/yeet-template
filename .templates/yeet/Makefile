@@ -27,7 +27,7 @@ CONTAINER ?= $(shell test -e /.dockerenv && echo yes || echo no)
 
 default: $(if $(filter yes, $(CONTAINER)), container, vmlinux $(BUILDDIR) $(BINDIR) $(BINDIR)/$(TARGET))
 ifeq ($(CONTAINER), yes)
-	docker run --rm -it -v .:/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make
+	docker run --rm -it -v $(CURDIR):/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make
 endif
 
 debug: CFLAGS += -DBPF_DEBUG=1
@@ -63,7 +63,7 @@ clean:
 
 vmlinux: $(if $(filter yes, $(CONTAINER)), container, )
 ifeq ($(CONTAINER), yes)
-	docker run --rm -it -v .:/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make vmlinux
+	docker run --rm -it -v $(CURDIR):/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make vmlinux
 else
 	bpftool btf dump file $(VMLINUX) format c > include/vmlinux.h
 endif
@@ -73,7 +73,7 @@ clean_vmlinux:
 
 format: check_format
 ifeq ($(CONTAINER), yes)
-	docker run --rm -it -v .:/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make format
+	docker run --rm -it -v $(CURDIR):/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make format
 else
 	@-$(MAKE) --no-print-directory check_format
 	@find . -name "*.c" -exec clang-format-19 -i -style=file:$(CFORMAT) {} + || exit 1; \
@@ -82,7 +82,7 @@ endif
 
 check_format: $(if $(filter yes, $(CONTAINER)), container, )
 ifeq ($(CONTAINER), yes)
-	docker run --rm -it -v .:/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make check_format
+	docker run --rm -it -v $(CURDIR):/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make check_format
 else
 	@find . -name "*.c" -exec clang-format-19 -style=file:$(CFORMAT) --dry-run --Werror {} + || exit 1;
 endif
