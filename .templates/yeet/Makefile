@@ -25,7 +25,7 @@ SRCS := $(wildcard $(SRCDIR)/*.bpf.c)
 OBJS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SRCS))
 CONTAINER ?= $(shell test -e /.dockerenv && echo yes || echo no)
 
-default: $(if $(filter yes, $(CONTAINER)), container, vmlinux $(BUILDDIR) $(BINDIR) $(BINDIR)/$(TARGET))
+default: $(if $(filter yes, $(CONTAINER)), container, include/vmlinux.h $(BUILDDIR) $(BINDIR) $(BINDIR)/$(TARGET))
 ifeq ($(CONTAINER), yes)
 	docker run --rm -it -v $(CURDIR):/opt/$(TARGET) -w /opt/$(TARGET) $(TARGET) make
 endif
@@ -60,6 +60,9 @@ clean:
 	rm -rf $(BINDIR)
 	rm -rf $(TARGET).yeet
 	rm -rf $(TARGET)
+
+include/vmlinux.h: $(if $(filter yes, $(CONTAINER)), /sys/kernel/btf/vmlinux, )
+	make vmlinux
 
 vmlinux: $(if $(filter yes, $(CONTAINER)), container, )
 ifeq ($(CONTAINER), yes)
